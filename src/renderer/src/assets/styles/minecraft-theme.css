@@ -1,0 +1,432 @@
+/* Minecraft 风格主题 */
+
+:root {
+  /* 主色调 - 泥土棕/草绿 */
+  --mc-primary: #5D8C3E;
+  --mc-primary-dark: #4A7A2E;
+  --mc-primary-light: #6FA04E;
+
+  /* 背景色 - 石头灰 */
+  --mc-bg-dark: #1a1a1a;
+  --mc-bg-main: #2d2d2d;
+  --mc-bg-light: #3d3d3d;
+  --mc-bg-lighter: #4a4a4a;
+
+  /* 文字色 */
+  --mc-text: #ffffff;
+  --mc-text-secondary: #a0a0a0;
+  --mc-text-muted: #707070;
+
+  /* 边框 */
+  --mc-border: #1a1a1a;
+  --mc-border-light: #3a3a3a;
+
+  /* 强调色 */
+  --mc-accent: #8B5A2B;
+  --mc-accent-dark: #6B4423;
+
+  /* 状态色 */
+  --mc-success: #5D8C3E;
+  --mc-warning: #D4A017;
+  --mc-danger: #B33A3A;
+  --mc-info: #3A7CA5;
+
+  /* 阴影 */
+  --mc-shadow: rgba(0, 0, 0, 0.5);
+
+  /* 方块边框效果 */
+  --mc-block-border: 3px;
+}
+
+/* 全局重置 */
+html, body {
+  font-family: 'Minecraft', 'Courier New', monospace;
+  background-color: var(--mc-bg-main);
+  color: var(--mc-text);
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+}
+
+/* 滚动条 Minecraft 风格 */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--mc-bg-dark);
+  border: 2px solid var(--mc-border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--mc-bg-lighter);
+  border: 2px solid var(--mc-border);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mc-bg-light);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--mc-bg-dark);
+}
+
+/* Minecraft 按钮风格 */
+.mc-button {
+  background: linear-gradient(180deg, #7a7a7a 0%, #5a5a5a 50%, #4a4a4a 51%, #3a3a3a 100%);
+  border: 3px solid;
+  border-color: #8a8a8a #2a2a2a #2a2a2a #8a8a8a;
+  color: #ffffff;
+  padding: 8px 16px;
+  font-family: 'Minecraft', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  text-shadow: 2px 2px 0 #3f3f3f;
+  transition: none;
+}
+
+.mc-button:hover {
+  background: linear-gradient(180deg, #8a9a6a 0%, #6a8a4a 50%, #5a7a3a 51%, #4a6a2a 100%);
+  border-color: #9aab7a #3a5a1a #3a5a1a #9aab7a;
+}
+
+.mc-button:active {
+  border-color: #2a2a2a #8a8a8a #8a8a8a #2a2a2a;
+}
+
+.mc-button.primary {
+  background: linear-gradient(180deg, #6a9a4a 0%, #4a7a2a 50%, #3a6a1a 51%, #2a5a0a 100%);
+  border-color: #7aab5a #1a4a0a #1a4a0a #7aab5a;
+}
+
+.mc-button.primary:hover {
+  background: linear-gradient(180deg, #7aaa5a 0%, #5a8a3a 50%, #4a7a2a 51%, #3a6a1a 100%);
+  border-color: #8abb6a #2a5a1a #2a5a1a #8abb6a;
+}
+
+/* Minecraft 输入框风格 */
+.mc-input {
+  background: var(--mc-bg-dark);
+  border: 3px solid;
+  border-color: #2a2a2a #8a8a8a #8a8a8a #2a2a2a;
+  color: var(--mc-text);
+  padding: 8px 12px;
+  font-family: 'Minecraft', monospace;
+  font-size: 14px;
+}
+
+.mc-input:focus {
+  outline: none;
+  border-color: var(--mc-primary);
+}
+
+/* Minecraft 面板风格 */
+.mc-panel {
+  background: var(--mc-bg-light);
+  border: 3px solid;
+  border-color: #5a5a5a #1a1a1a #1a1a1a #5a5a5a;
+  padding: 12px;
+}
+
+.mc-panel-inset {
+  background: var(--mc-bg-dark);
+  border: 3px solid;
+  border-color: #1a1a1a #5a5a5a #5a5a5a #1a1a1a;
+  padding: 12px;
+}
+
+/* Minecraft 标题风格 */
+.mc-title {
+  color: #ffff55;
+  text-shadow: 2px 2px 0 #3f3f00;
+  font-size: 18px;
+  font-weight: normal;
+}
+
+/* Minecraft 物品槽风格 */
+.mc-slot {
+  background: #8b8b8b;
+  border: 3px solid;
+  border-color: #373737 #ffffff #ffffff #373737;
+  padding: 4px;
+  width: 32px;
+  height: 32px;
+}
+
+.mc-slot-inner {
+  background: #8b8b8b;
+  border: 2px solid;
+  border-color: #555555 #c6c6c6 #c6c6c6 #555555;
+  width: 100%;
+  height: 100%;
+}
+
+/* 覆盖 Element Plus 主题 */
+.el-button {
+  border-radius: 0 !important;
+  font-family: 'Minecraft', monospace;
+  border-width: 2px;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+
+.el-button--primary {
+  background: linear-gradient(180deg, var(--mc-primary-light) 0%, var(--mc-primary) 50%, var(--mc-primary-dark) 100%);
+  border-color: var(--mc-primary-light) var(--mc-primary-dark) var(--mc-primary-dark) var(--mc-primary-light);
+}
+
+.el-button--primary:hover {
+  background: linear-gradient(180deg, #7aaa5a 0%, #5a8a3a 50%, #4a7a2a 100%);
+}
+
+.el-input__wrapper {
+  border-radius: 0 !important;
+  background: var(--mc-bg-dark) !important;
+  border: 2px solid;
+  border-color: #2a2a2a #5a5a5a #5a5a5a #2a2a2a !important;
+  box-shadow: none !important;
+}
+
+.el-input__wrapper:hover {
+  border-color: var(--mc-primary) !important;
+}
+
+.el-input__wrapper.is-focus {
+  border-color: var(--mc-primary-light) var(--mc-primary-dark) var(--mc-primary-dark) var(--mc-primary-light) !important;
+}
+
+.el-input__inner {
+  color: var(--mc-text) !important;
+  font-family: 'Minecraft', monospace;
+}
+
+.el-input__inner::placeholder {
+  color: var(--mc-text-muted) !important;
+}
+
+.el-select {
+  font-family: 'Minecraft', monospace;
+}
+
+.el-select .el-input__wrapper {
+  background: var(--mc-bg-dark) !important;
+}
+
+.el-select-dropdown {
+  background: var(--mc-bg-light) !important;
+  border: 2px solid var(--mc-border) !important;
+  border-radius: 0 !important;
+}
+
+.el-select-dropdown__item {
+  color: var(--mc-text) !important;
+  font-family: 'Minecraft', monospace;
+}
+
+.el-select-dropdown__item:hover {
+  background: var(--mc-bg-lighter) !important;
+}
+
+.el-select-dropdown__item.selected {
+  background: var(--mc-primary) !important;
+  color: #fff !important;
+}
+
+.el-input-number {
+  font-family: 'Minecraft', monospace;
+}
+
+.el-input-number .el-input__wrapper {
+  background: var(--mc-bg-dark) !important;
+}
+
+.el-input-number__decrease,
+.el-input-number__increase {
+  background: var(--mc-bg-lighter) !important;
+  border-color: var(--mc-border) !important;
+  color: var(--mc-text) !important;
+}
+
+.el-switch {
+  font-family: 'Minecraft', monospace;
+}
+
+.el-switch__core {
+  border-radius: 2px !important;
+  border: 2px solid var(--mc-border) !important;
+}
+
+.el-switch.is-checked .el-switch__core {
+  background: var(--mc-primary) !important;
+  border-color: var(--mc-primary-dark) !important;
+}
+
+.el-collapse {
+  border: none !important;
+  font-family: 'Minecraft', monospace;
+}
+
+.el-collapse-item__header {
+  background: var(--mc-bg-lighter) !important;
+  color: var(--mc-text) !important;
+  border: 2px solid;
+  border-color: #5a5a5a #2a2a2a #2a2a2a #5a5a5a;
+  border-radius: 0 !important;
+}
+
+.el-collapse-item__header:hover {
+  background: var(--mc-bg-light) !important;
+}
+
+.el-collapse-item__wrap {
+  background: transparent !important;
+  border: none !important;
+}
+
+.el-collapse-item__content {
+  background: transparent !important;
+  color: var(--mc-text) !important;
+}
+
+.el-tooltip__trigger {
+  outline: none !important;
+}
+
+.el-tag {
+  border-radius: 0 !important;
+  font-family: 'Minecraft', monospace;
+  border-width: 2px;
+}
+
+.el-tag--success {
+  background: rgba(93, 140, 62, 0.2) !important;
+  border-color: var(--mc-success) !important;
+  color: var(--mc-success) !important;
+}
+
+.el-tag--warning {
+  background: rgba(212, 160, 23, 0.2) !important;
+  border-color: var(--mc-warning) !important;
+  color: var(--mc-warning) !important;
+}
+
+.el-tag--info {
+  background: rgba(58, 124, 165, 0.2) !important;
+  border-color: var(--mc-info) !important;
+  color: var(--mc-info) !important;
+}
+
+.el-divider {
+  border-color: var(--mc-border-light) !important;
+}
+
+.el-empty__description {
+  color: var(--mc-text-secondary) !important;
+}
+
+/* 下拉菜单 */
+.el-dropdown-menu {
+  background: var(--mc-bg-light) !important;
+  border: 2px solid var(--mc-border) !important;
+  border-radius: 0 !important;
+}
+
+.el-dropdown-menu__item {
+  color: var(--mc-text) !important;
+  font-family: 'Minecraft', monospace;
+}
+
+.el-dropdown-menu__item:hover {
+  background: var(--mc-bg-lighter) !important;
+  color: #55ff55 !important;
+}
+
+/* Drawer */
+.el-drawer {
+  background: var(--mc-bg-main) !important;
+}
+
+.el-drawer__header {
+  color: #ffff55 !important;
+  text-shadow: 2px 2px 0 #3f3f00;
+  font-family: 'Minecraft', monospace;
+  margin-bottom: 0 !important;
+  padding: 16px !important;
+  background: var(--mc-bg-light);
+  border-bottom: 3px solid;
+  border-color: #5a5a5a #1a1a1a #1a1a1a #5a5a5a;
+}
+
+.el-drawer__title {
+  color: #ffff55 !important;
+  font-size: 16px;
+}
+
+.el-drawer__body {
+  padding: 16px !important;
+  color: var(--mc-text) !important;
+}
+
+/* Message */
+.el-message {
+  background: var(--mc-bg-light) !important;
+  border: 2px solid var(--mc-border) !important;
+  border-radius: 0 !important;
+  font-family: 'Minecraft', monospace;
+}
+
+.el-message__content {
+  color: var(--mc-text) !important;
+}
+
+.el-message--success .el-message__content {
+  color: #55ff55 !important;
+}
+
+.el-message--error .el-message__content {
+  color: #ff5555 !important;
+}
+
+/* MessageBox */
+.el-message-box {
+  background: var(--mc-bg-light) !important;
+  border: 3px solid !important;
+  border-color: #5a5a5a #1a1a1a #1a1a1a #5a5a5a !important;
+  border-radius: 0 !important;
+  font-family: 'Minecraft', monospace;
+}
+
+.el-message-box__title {
+  color: #ffff55 !important;
+}
+
+.el-message-box__content {
+  color: var(--mc-text) !important;
+}
+
+/* Tooltip */
+.el-tooltip__popper {
+  background: var(--mc-bg-dark) !important;
+  border: 2px solid var(--mc-border) !important;
+  border-radius: 0 !important;
+  color: var(--mc-text) !important;
+  font-family: 'Minecraft', monospace;
+}
+
+/* Popconfirm */
+.el-popconfirm {
+  font-family: 'Minecraft', monospace;
+}
+
+.el-popconfirm__main {
+  color: var(--mc-text) !important;
+}
+
+/* 自定义动画 */
+@keyframes mc-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.mc-bounce {
+  animation: mc-bounce 0.3s ease;
+}

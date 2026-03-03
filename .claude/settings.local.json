@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(tail:*)",
+      "mcp__Playwright__browser_navigate",
+      "mcp__Playwright__browser_close",
+      "mcp__Playwright__browser_take_screenshot",
+      "Bash(cd O:\\\\pet:*)",
+      "Bash(head:*)",
+      "Bash(cd:*)"
+    ]
+  }
+}

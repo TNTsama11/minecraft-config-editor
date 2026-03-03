@@ -1,0 +1,25 @@
+appId: com.mcconfigeditor
+productName: MC Config Editor
+directories:
+  buildResources: resources
+  output: release
+files:
+  - "out/**/*"
+  - "resources/**/*"
+win:
+  icon: resources/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: MC Config Editor
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  licenseInfo: null
+extraMetadata:
+  main: out/main/index.js

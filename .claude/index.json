@@ -1,0 +1,117 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2026-02-26T10:09:11+08:00",
+  "lastUpdated": "2026-02-26T18:30:00+08:00",
+  "project": {
+    "name": "MC Config Editor",
+    "summary": "Minecraft 服务端配置文件可视化编辑工具",
+    "rootPath": "O:\\pet",
+    "status": "development",
+    "initializedAt": "2026-02-26T10:09:11+08:00",
+    "techStack": {
+      "framework": "Electron 29",
+      "frontend": "Vue 3.4",
+      "build": "electron-vite 5",
+      "language": "TypeScript 5.3",
+      "ui": "Element Plus 2.5"
+    }
+  },
+  "modules": [
+    {
+      "name": "FileService",
+      "path": "src/main/services/FileService.ts",
+      "description": "文件系统操作服务",
+      "status": "completed"
+    },
+    {
+      "name": "ConfigService",
+      "path": "src/main/services/ConfigService.ts",
+      "description": "配置文件解析与序列化服务",
+      "status": "completed"
+    },
+    {
+      "name": "BackupService",
+      "path": "src/main/services/BackupService.ts",
+      "description": "备份管理服务",
+      "status": "completed"
+    },
+    {
+      "name": "MetadataService",
+      "path": "src/main/services/MetadataService.ts",
+      "description": "元数据管理服务",
+      "status": "completed"
+    },
+    {
+      "name": "HomeView",
+      "path": "src/renderer/src/views/HomeView.vue",
+      "description": "首页视图 - 目录选择",
+      "status": "completed"
+    },
+    {
+      "name": "EditorView",
+      "path": "src/renderer/src/views/EditorView.vue",
+      "description": "编辑器视图 - 配置编辑",
+      "status": "completed"
+    },
+    {
+      "name": "FileTree",
+      "path": "src/renderer/src/components/tree/FileTree.vue",
+      "description": "文件树组件",
+      "status": "completed"
+    },
+    {
+      "name": "ConfigEditor",
+      "path": "src/renderer/src/components/editor/ConfigEditor.vue",
+      "description": "配置编辑器组件",
+      "status": "completed"
+    },
+    {
+      "name": "BackupPanel",
+      "path": "src/renderer/src/components/backup/BackupPanel.vue",
+      "description": "备份管理面板",
+      "status": "completed"
+    }
+  ],
+  "scanStats": {
+    "estimatedTotalFiles": 45,
+    "scannedFiles": 45,
+    "coveragePercent": 100,
+    "truncated": false
+  },
+  "features": {
+    "supportedFormats": ["properties", "yaml", "toml", "json"],
+    "builtinMetadata": ["server.properties"],
+    "backup": true,
+    "offline": true,
+    "i18n": "zh-CN"
+  },
+  "gaps": {
+    "missingTests": true,
+    "missingE2E": true,
+    "details": [
+      {
+        "type": "tests",
+        "severity": "low",
+        "message": "暂无单元测试",
+        "suggestion": "添加 Vitest 单元测试"
+      }
+    ]
+  },
+  "nextSteps": [
+    {
+      "priority": 1,
+      "action": "添加应用图标",
+      "description": "创建 resources/icon.ico"
+    },
+    {
+      "priority": 2,
+      "action": "测试功能",
+      "description": "运行 npm run dev 测试各项功能"
+    },
+    {
+      "priority": 3,
+      "action": "打包发布",
+      "description": "运行 npm run build:win 生成安装程序"
+    }
+  ]
+}
