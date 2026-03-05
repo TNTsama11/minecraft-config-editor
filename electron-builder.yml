@@ -20,6 +20,5 @@ nsis:
   shortcutName: MC Config Editor
   installerIcon: resources/icon.ico
   uninstallerIcon: resources/icon.ico
-  licenseInfo: null
 extraMetadata:
   main: out/main/index.js
