@@ -13,6 +13,8 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -57,48 +59,10 @@ jobs:
             release/*.yml
           retention-days: 30
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Get version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          elif [ -n "${{ github.event.inputs.version }}" ]; then
-            VERSION=${{ github.event.inputs.version }}
-          else
-            VERSION="latest"
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: MC-Config-Editor-${{ steps.version.outputs.version }}-windows
-          path: release
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: MC Config Editor v${{ steps.version.outputs.version }}
-          draft: false
-          prerelease: false
-          files: |
-            release/*.exe
-            release/*.yml
-          body: |
-            ## MC Config Editor v${{ steps.version.outputs.version }}
-
-            ### 下载
-            - 下载 `.exe` 安装程序进行安装
-
-            ### 更新内容
-            请查看 [提交历史](https://github.com/${{ github.repository }}/commits/v${{ steps.version.outputs.version }}) 了解详细变更。
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+  create-release:
+    needs: build-windows
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.inputs.version != ''
     permissions:
       contents: write
 
