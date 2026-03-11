@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Clock } from '@element-plus/icons-vue'
 import type { Backup } from '../../../../common/types'
@@ -144,10 +144,7 @@ function formatSize(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
-// 监听文件路径变化
 watch(() => props.filePath, loadBackups, { immediate: true })
-
-onMounted(loadBackups)
 </script>
 
 <style scoped>

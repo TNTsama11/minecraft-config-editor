@@ -14,18 +14,18 @@
 
       <!-- 主按钮 -->
       <div class="action-section">
-        <button class="mc-home-button primary" @click="selectDirectory">
+        <button class="mc-home-button primary" @click="selectDirectory" :disabled="loading">
           <span class="btn-icon">📁</span>
-          <span>选择 Minecraft 目录</span>
+          <span>{{ loading ? '正在打开...' : '选择 Minecraft 目录' }}</span>
         </button>
       </div>
 
       <!-- 最近打开 -->
-      <div class="recent-section" v-if="recentServers.length > 0">
+      <div class="recent-section" v-if="fileStore.recentServers.length > 0">
         <h3>最近打开</h3>
         <div class="recent-list">
           <div
-            v-for="server in recentServers"
+            v-for="server in fileStore.recentServers"
             :key="server.path"
             class="recent-item"
             @click="openRecent(server.path)"
@@ -35,6 +35,8 @@
               <span class="recent-name">{{ server.name }}</span>
               <span class="recent-path">{{ server.path }}</span>
             </div>
+            <span class="recent-time">{{ formatRelativeTime(server.lastOpened) }}</span>
+            <button class="recent-remove" @click.stop="fileStore.removeRecentServer(server.path)" title="移除">✕</button>
           </div>
         </div>
       </div>
@@ -86,7 +88,7 @@
 
       <!-- 版本信息 -->
       <div class="version-info">
-        v1.0.0
+        v{{ appVersion }}
       </div>
     </div>
 
@@ -104,13 +106,17 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import type { RecentServer } from '../../common/types'
+import { useFileStore } from '@/stores/fileStore'
 
 const router = useRouter()
+const fileStore = useFileStore()
+const loading = ref(false)
 
-const recentServers = ref<RecentServer[]>([])
+// 从 package.json 读取版本号（构建时由 vite 注入）
+const appVersion = __APP_VERSION__
 
 async function selectDirectory(): Promise<void> {
+  loading.value = true
   try {
     const path = await window.electronAPI.file.selectDirectory()
     if (path) {
@@ -118,11 +124,27 @@ async function selectDirectory(): Promise<void> {
     }
   } catch (error) {
     ElMessage.error('选择目录失败：' + (error as Error).message)
+  } finally {
+    loading.value = false
   }
 }
 
 function openRecent(path: string): void {
   router.push({ path: '/editor', query: { dir: path } })
+}
+
+function formatRelativeTime(dateStr: string): string {
+  const now = Date.now()
+  const then = new Date(dateStr).getTime()
+  const diff = now - then
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟前`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}小时前`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}天前`
+  return new Date(dateStr).toLocaleDateString('zh-CN')
 }
 </script>
 
@@ -213,17 +235,22 @@ function openRecent(path: string): void {
   transition: none;
 }
 
+.mc-home-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .mc-home-button.primary {
   background: linear-gradient(180deg, #6a9a4a 0%, #4a7a2a 50%, #3a6a1a 51%, #2a5a0a 100%);
   border-color: #7aab5a #1a4a0a #1a4a0a #7aab5a;
 }
 
-.mc-home-button.primary:hover {
+.mc-home-button.primary:hover:not(:disabled) {
   background: linear-gradient(180deg, #7aaa5a 0%, #5a8a3a 50%, #4a7a2a 51%, #3a6a1a 100%);
   border-color: #8abb6a #2a5a1a #2a5a1a #8abb6a;
 }
 
-.mc-home-button:active {
+.mc-home-button:active:not(:disabled) {
   border-color: #1a4a0a #7aab5a #7aab5a #1a4a0a;
 }
 
@@ -268,6 +295,7 @@ function openRecent(path: string): void {
 
 .recent-icon {
   font-size: 16px;
+  flex-shrink: 0;
 }
 
 .recent-info {
@@ -276,6 +304,8 @@ function openRecent(path: string): void {
   gap: 2px;
   overflow: hidden;
   text-align: left;
+  flex: 1;
+  min-width: 0;
 }
 
 .recent-name {
@@ -289,6 +319,28 @@ function openRecent(path: string): void {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.recent-time {
+  font-size: 10px;
+  color: #555555;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.recent-remove {
+  font-size: 10px;
+  color: #555555;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  font-family: 'Minecraft', monospace;
+}
+
+.recent-remove:hover {
+  color: #ff5555;
 }
 
 /* 配置类型说明 */

@@ -8,7 +8,14 @@
       "mcp__Playwright__browser_take_screenshot",
       "Bash(cd O:\\\\pet:*)",
       "Bash(head:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Skill(zcf:git-commit)",
+      "Bash(echo ImageMagick not found:*)",
+      "Bash(python:*)",
+      "Bash(sleep 15:*)",
+      "Bash(cd \"O:/pet\" && gh release delete v1.0.1 --yes 2>&1 && gh release delete v1.0.0 --yes 2>&1)",
+      "Bash(sleep 20:*)",
+      "Bash(cd \"O:/pet\" && gh run view 22892810268 2>&1)"
     ]
   }
 }

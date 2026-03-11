@@ -1,11 +1,45 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
+import { join, resolve, sep } from 'path'
+import { promises as fs } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { FileService } from './services/FileService'
 import { ConfigService } from './services/ConfigService'
 import { BackupService } from './services/BackupService'
 import { MetadataService } from './services/MetadataService'
 import { AppError, toAppError, ErrorCode } from '../common/errors'
+
+// 窗口状态持久化
+interface WindowState {
+  x?: number
+  y?: number
+  width: number
+  height: number
+  isMaximized?: boolean
+}
+
+const WINDOW_STATE_FILE = join(app.getPath('userData'), 'window-state.json')
+
+async function loadWindowState(): Promise<WindowState> {
+  try {
+    const data = await fs.readFile(WINDOW_STATE_FILE, 'utf-8')
+    return JSON.parse(data)
+  } catch {
+    return { width: 1280, height: 800 }
+  }
+}
+
+async function saveWindowState(win: BrowserWindow): Promise<void> {
+  try {
+    const bounds = win.getBounds()
+    const state: WindowState = {
+      ...bounds,
+      isMaximized: win.isMaximized()
+    }
+    await fs.writeFile(WINDOW_STATE_FILE, JSON.stringify(state), 'utf-8')
+  } catch {
+    // 保存失败不影响使用
+  }
+}
 
 // 导出类型供 preload 使用
 export type { CategorizedFiles, FileTreeNode } from './services/FileService'
@@ -32,11 +66,14 @@ function handleIpc<T>(
   })
 }
 
-function createWindow(): void {
-  // 创建浏览器窗口
+async function createWindow(): Promise<void> {
+  const state = await loadWindowState()
+
   const mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 800,
+    width: state.width,
+    height: state.height,
+    x: state.x,
+    y: state.y,
     minWidth: 900,
     minHeight: 600,
     show: false,
@@ -50,8 +87,16 @@ function createWindow(): void {
     }
   })
 
+  if (state.isMaximized) {
+    mainWindow.maximize()
+  }
+
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+  })
+
+  mainWindow.on('close', () => {
+    saveWindowState(mainWindow)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -121,13 +166,18 @@ function registerIpcHandlers(): void {
     return FileService.writeFile(filePath, content)
   })
 
-  // 用系统默认程序打开文件
   handleIpc('file:openFile', async (filePath: string) => {
+    const root = FileService.getAllowedRoot()
+    if (root) {
+      const resolved = resolve(filePath)
+      if (!resolved.startsWith(resolve(root) + sep) && resolved !== resolve(root)) {
+        throw new AppError(ErrorCode.FILE_READ_ERROR, '路径超出允许范围')
+      }
+    }
     await shell.openPath(filePath)
     return true
   })
 
-  // 打开文件所在位置
   handleIpc('file:openInFolder', async (filePath: string) => {
     shell.showItemInFolder(filePath)
     return true
@@ -166,5 +216,9 @@ function registerIpcHandlers(): void {
 
   handleIpc('metadata:save', async (filePath: string, metadata: unknown) => {
     return MetadataService.saveUserMetadata(filePath, metadata as Record<string, unknown>)
+  })
+
+  handleIpc('metadata:delete', async (filePath: string) => {
+    return MetadataService.deleteUserMetadata(filePath)
   })
 }

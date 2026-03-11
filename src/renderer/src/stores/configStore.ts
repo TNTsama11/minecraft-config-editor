@@ -1,65 +1,111 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { ConfigNode, FieldMetadata } from '../../../common/types'
+import type { ConfigNode, ConfigValue, FieldMetadata } from '../../../common/types'
+import { getFieldType } from '../../../common/types'
+
+const MAX_HISTORY = 50
 
 export const useConfigStore = defineStore('config', () => {
-  // 当前配置数据
   const configData = ref<ConfigNode[]>([])
-
-  // 原始配置数据（用于检测更改）
   const originalData = ref<string>('')
-
-  // 当前文件的元数据
   const metadata = ref<Record<string, FieldMetadata>>({})
 
-  // 是否有未保存的更改
+  // 撤销/重做栈
+  const undoStack = ref<string[]>([])
+  const redoStack = ref<string[]>([])
+
   const hasChanges = computed(() => {
     if (!originalData.value) return false
     return JSON.stringify(configData.value) !== originalData.value
   })
 
-  // 设置配置数据
+  const canUndo = computed(() => undoStack.value.length > 0)
+  const canRedo = computed(() => redoStack.value.length > 0)
+
   function setConfigData(data: ConfigNode[]): void {
     configData.value = data
     originalData.value = JSON.stringify(data)
+    undoStack.value = []
+    redoStack.value = []
   }
 
-  // 更新配置节点
-  function updateConfigNode(path: string, value: unknown): void {
-    const updateNode = (nodes: ConfigNode[]): boolean => {
+  function updateConfigNode(path: string, value: ConfigValue): void {
+    // 保存当前状态到撤销栈
+    undoStack.value.push(JSON.stringify(configData.value))
+    if (undoStack.value.length > MAX_HISTORY) {
+      undoStack.value.shift()
+    }
+    redoStack.value = []
+
+    const doUpdate = (nodes: ConfigNode[]): boolean => {
       for (const node of nodes) {
         if (node.path === path) {
-          node.value = value as ConfigNode['value']
+          node.value = value
           node.modified = true
+
+          // 列表类型：同步重建 children 以保持 UI 一致
+          if (node.type === 'list' && Array.isArray(value)) {
+            node.children = value.map((v, i) => ({
+              key: String(i),
+              path: `${path}[${i}]`,
+              value: v as ConfigValue,
+              type: getFieldType(v as ConfigValue),
+              modified: true
+            }))
+          }
+
           return true
         }
-        if (node.children && updateNode(node.children)) {
+        if (node.children && doUpdate(node.children)) {
           return true
         }
       }
       return false
     }
-    updateNode(configData.value)
+    doUpdate(configData.value)
   }
 
-  // 设置元数据
+  function undo(): void {
+    if (undoStack.value.length === 0) return
+    redoStack.value.push(JSON.stringify(configData.value))
+    const prev = undoStack.value.pop()!
+    configData.value = JSON.parse(prev)
+  }
+
+  function redo(): void {
+    if (redoStack.value.length === 0) return
+    undoStack.value.push(JSON.stringify(configData.value))
+    const next = redoStack.value.pop()!
+    configData.value = JSON.parse(next)
+  }
+
+  function markSaved(): void {
+    originalData.value = JSON.stringify(configData.value)
+  }
+
   function setMetadata(data: Record<string, FieldMetadata>): void {
     metadata.value = data
   }
 
-  // 清空状态
   function clear(): void {
     configData.value = []
     originalData.value = ''
     metadata.value = {}
+    undoStack.value = []
+    redoStack.value = []
   }
 
   return {
     configData,
     metadata,
     hasChanges,
+    canUndo,
+    canRedo,
     setConfigData,
     updateConfigNode,
+    undo,
+    redo,
+    markSaved,
     setMetadata,
     clear
   }

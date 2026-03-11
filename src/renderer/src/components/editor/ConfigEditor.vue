@@ -13,8 +13,9 @@
         prefix-icon="Search"
         clearable
         size="small"
+        @input="onSearchInput"
       />
-      <span v-if="searchText && matchCount > 0" class="match-count">
+      <span v-if="debouncedSearch && matchCount > 0" class="match-count">
         {{ matchCount }} 个匹配
       </span>
     </div>
@@ -26,11 +27,11 @@
           :key="node.path"
           :node="node"
           :metadata="metadata[node.path]"
-          :search-text="searchText"
+          :search-text="debouncedSearch"
           @change="handleNodeChange"
         />
       </template>
-      <template v-else-if="configData.length > 0 && searchText">
+      <template v-else-if="configData.length > 0 && debouncedSearch">
         <div class="empty-tip">
           <el-icon :size="48"><Search /></el-icon>
           <p>未找到匹配的字段</p>
@@ -60,25 +61,30 @@ interface Props {
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  change: [data: ConfigNode[]]
+  change: [path: string, value: ConfigValue]
 }>()
 
 const searchText = ref('')
+const debouncedSearch = ref('')
+let searchTimer: ReturnType<typeof setTimeout> | null = null
 
-// 检查节点是否匹配搜索词
+function onSearchInput(): void {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    debouncedSearch.value = searchText.value
+  }, 250)
+}
+
 function nodeMatchesSearch(node: ConfigNode, search: string): boolean {
   if (!search) return true
   const lowerSearch = search.toLowerCase()
 
-  // 检查 key
   if (node.key.toLowerCase().includes(lowerSearch)) return true
 
-  // 检查 value
   if (node.value !== null && node.value !== undefined) {
     if (String(node.value).toLowerCase().includes(lowerSearch)) return true
   }
 
-  // 检查子节点
   if (node.children) {
     return node.children.some(child => nodeMatchesSearch(child, search))
   }
@@ -86,13 +92,12 @@ function nodeMatchesSearch(node: ConfigNode, search: string): boolean {
   return false
 }
 
-// 过滤配置数据
 const filteredData = computed(() => {
-  if (!searchText.value) return props.configData
+  if (!debouncedSearch.value) return props.configData
 
   const filterNodes = (nodes: ConfigNode[]): ConfigNode[] => {
     return nodes
-      .filter(node => nodeMatchesSearch(node, searchText.value))
+      .filter(node => nodeMatchesSearch(node, debouncedSearch.value))
       .map(node => {
         if (node.children) {
           return {
@@ -107,16 +112,16 @@ const filteredData = computed(() => {
   return filterNodes(props.configData)
 })
 
-// 统计匹配数量
 const matchCount = computed(() => {
-  if (!searchText.value) return 0
+  if (!debouncedSearch.value) return 0
+  const search = debouncedSearch.value.toLowerCase()
 
   let count = 0
   const countMatches = (nodes: ConfigNode[]) => {
     for (const node of nodes) {
-      const keyMatch = node.key.toLowerCase().includes(searchText.value.toLowerCase())
+      const keyMatch = node.key.toLowerCase().includes(search)
       const valueMatch = node.value !== null && node.value !== undefined &&
-        String(node.value).toLowerCase().includes(searchText.value.toLowerCase())
+        String(node.value).toLowerCase().includes(search)
 
       if (keyMatch || valueMatch) count++
 
@@ -130,25 +135,8 @@ const matchCount = computed(() => {
   return count
 })
 
-// 处理节点变更
 function handleNodeChange(path: string, value: ConfigValue): void {
-  const updateNode = (nodes: ConfigNode[]): boolean => {
-    for (const node of nodes) {
-      if (node.path === path) {
-        node.value = value
-        node.modified = true
-        return true
-      }
-      if (node.children && updateNode(node.children)) {
-        return true
-      }
-    }
-    return false
-  }
-
-  const newData = JSON.parse(JSON.stringify(props.configData))
-  updateNode(newData)
-  emit('change', newData)
+  emit('change', path, value)
 }
 </script>
 

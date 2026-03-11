@@ -5,6 +5,7 @@ import 'element-plus/dist/index.css'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import App from './App.vue'
 import router from './router'
+import { setupGlobalErrorHandler } from './composables/useError'
 
 import './assets/styles/main.css'
 import './assets/styles/minecraft-theme.css'
@@ -14,5 +15,11 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 app.use(ElementPlus, { locale: zhCn })
+
+setupGlobalErrorHandler()
+
+app.config.errorHandler = (err) => {
+  console.error('[Vue Error]', err)
+}
 
 app.mount('#app')

@@ -13,6 +13,10 @@ const routes: RouteRecordRaw[] = [
     name: 'editor',
     component: () => import('@/views/EditorView.vue'),
     meta: { title: '编辑器' }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
   }
 ]
 

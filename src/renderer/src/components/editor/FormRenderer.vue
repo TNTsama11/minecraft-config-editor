@@ -29,7 +29,8 @@
       <div class="list-field">
         <div class="field-header">
           <span class="key-name" v-html="highlightText(node.key)"></span>
-          <span class="type-badge">列表</span>
+          <span class="type-badge">列表 ({{ node.children.length }})</span>
+          <button class="list-add-btn" @click="handleListAdd" title="添加项">+</button>
         </div>
         <div class="list-items">
           <div v-for="(child, index) in node.children" :key="child.path" class="list-item">
@@ -40,6 +41,7 @@
               :metadata="fieldMetadata"
               @change="(value) => handleListChange(index, value)"
             />
+            <button class="list-remove-btn" @click="handleListRemove(index)" title="移除">✕</button>
           </div>
         </div>
       </div>
@@ -117,19 +119,22 @@ const isMatch = computed(() => {
   return false
 })
 
-// 高亮匹配的文本
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 function highlightText(text: string): string {
-  if (!props.searchText) return text
+  if (!props.searchText) return escapeHtml(text)
 
   const search = props.searchText.toLowerCase()
   const lowerText = text.toLowerCase()
   const index = lowerText.indexOf(search)
 
-  if (index === -1) return text
+  if (index === -1) return escapeHtml(text)
 
-  const before = text.slice(0, index)
-  const match = text.slice(index, index + search.length)
-  const after = text.slice(index + search.length)
+  const before = escapeHtml(text.slice(0, index))
+  const match = escapeHtml(text.slice(index, index + search.length))
+  const after = escapeHtml(text.slice(index + search.length))
 
   return `${before}<mark class="highlight">${match}</mark>${after}`
 }
@@ -178,7 +183,6 @@ function handleValueChange(value: ConfigValue): void {
   emit('change', props.node.path, value)
 }
 
-// 处理列表项变更
 function handleListChange(index: number, value: ConfigValue): void {
   if (props.node.children) {
     const newList = props.node.children.map((child, i) =>
@@ -186,6 +190,21 @@ function handleListChange(index: number, value: ConfigValue): void {
     )
     emit('change', props.node.path, newList.map((c) => c.value))
   }
+}
+
+function handleListAdd(): void {
+  const children = props.node.children || []
+  const values = children.map((c) => c.value)
+  const lastVal = values.length > 0 ? values[values.length - 1] : ''
+  const defaultVal = typeof lastVal === 'number' ? 0 : typeof lastVal === 'boolean' ? false : ''
+  values.push(defaultVal)
+  emit('change', props.node.path, values)
+}
+
+function handleListRemove(index: number): void {
+  const children = props.node.children || []
+  const values = children.map((c) => c.value).filter((_, i) => i !== index)
+  emit('change', props.node.path, values)
 }
 </script>
 
@@ -318,6 +337,35 @@ function handleListChange(index: number, value: ConfigValue): void {
   font-size: 11px;
   color: #707070;
   flex-shrink: 0;
+}
+
+.list-add-btn,
+.list-remove-btn {
+  background: none;
+  border: 2px solid var(--mc-border, #3a3a3a);
+  color: #aaaaaa;
+  font-family: 'Minecraft', monospace;
+  cursor: pointer;
+  padding: 2px 8px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.list-add-btn:hover {
+  background: rgba(93, 140, 62, 0.3);
+  color: #55ff55;
+  border-color: #55ff55;
+}
+
+.list-remove-btn {
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+.list-remove-btn:hover {
+  background: rgba(255, 85, 85, 0.3);
+  color: #ff5555;
+  border-color: #ff5555;
 }
 
 /* 高亮样式 */

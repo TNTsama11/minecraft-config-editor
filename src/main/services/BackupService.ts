@@ -3,6 +3,7 @@ import { promises as fs } from 'fs'
 import * as path from 'path'
 import * as crypto from 'crypto'
 import type { Backup } from '../../common/types'
+import { BackupError, ErrorCode } from '../../common/errors'
 
 export class BackupService {
   private static backupDir: string
@@ -82,7 +83,7 @@ export class BackupService {
       return backup
     } catch (error) {
       console.error('创建备份失败:', error)
-      throw new Error(`创建备份失败: ${(error as Error).message}`)
+      throw new BackupError(ErrorCode.BACKUP_CREATE_ERROR, filePath, { cause: error as Error })
     }
   }
 
@@ -128,11 +129,10 @@ export class BackupService {
   }
 
   /**
-   * 恢复备份
+   * 恢复备份（恢复前会自动备份当前文件，防止误操作）
    */
   static async restoreBackup(backupId: string): Promise<void> {
     try {
-      // 在所有备份目录中查找该备份
       const baseDir = await this.initBackupDir()
       const subDirs = await fs.readdir(baseDir)
 
@@ -143,10 +143,15 @@ export class BackupService {
           const content = await fs.readFile(metaPath, 'utf-8')
           const backup: Backup = JSON.parse(content)
 
-          // 读取备份文件内容
-          const backupContent = await fs.readFile(backup.backupPath)
+          // 恢复前先备份当前文件，以便撤销恢复操作
+          try {
+            await this.createBackup(backup.originalPath)
+          } catch {
+            // 备份失败不阻止恢复，但记录日志
+            console.warn('恢复前自动备份失败，继续恢复操作')
+          }
 
-          // 写入原文件
+          const backupContent = await fs.readFile(backup.backupPath)
           await fs.writeFile(backup.originalPath, backupContent)
 
           return
@@ -155,10 +160,11 @@ export class BackupService {
         }
       }
 
-      throw new Error('备份不存在')
+      throw new BackupError(ErrorCode.BACKUP_NOT_FOUND, backupId)
     } catch (error) {
+      if (error instanceof BackupError) throw error
       console.error('恢复备份失败:', error)
-      throw new Error(`恢复备份失败: ${(error as Error).message}`)
+      throw new BackupError(ErrorCode.BACKUP_RESTORE_ERROR, backupId, { cause: error as Error })
     }
   }
 
@@ -194,10 +200,11 @@ export class BackupService {
         }
       }
 
-      throw new Error('备份不存在')
+      throw new BackupError(ErrorCode.BACKUP_NOT_FOUND, backupId)
     } catch (error) {
+      if (error instanceof BackupError) throw error
       console.error('删除备份失败:', error)
-      throw new Error(`删除备份失败: ${(error as Error).message}`)
+      throw new BackupError(ErrorCode.BACKUP_CREATE_ERROR, backupId, { cause: error as Error })
     }
   }
 

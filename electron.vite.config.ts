@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import autoImport from 'unplugin-auto-import/vite'
 import components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import pkg from './package.json'
 
 export default defineConfig({
   main: {
@@ -33,6 +34,9 @@ export default defineConfig({
     }
   },
   renderer: {
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version)
+    },
     resolve: {
       alias: {
         '@': resolve('src/renderer/src')

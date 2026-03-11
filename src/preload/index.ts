@@ -63,7 +63,9 @@ const api = {
     get: (filePath: string): Promise<Record<string, FieldMetadata>> =>
       invoke('metadata:get', filePath),
     save: (filePath: string, metadata: Record<string, FieldMetadata>): Promise<void> =>
-      invoke('metadata:save', filePath, metadata)
+      invoke('metadata:save', filePath, metadata),
+    delete: (filePath: string): Promise<void> =>
+      invoke('metadata:delete', filePath)
   }
 }
 

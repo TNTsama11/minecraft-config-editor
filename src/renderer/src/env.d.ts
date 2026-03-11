@@ -16,8 +16,8 @@ interface ElectronAPI {
     buildTree: (files: ConfigFile[], baseDir: string) => Promise<FileTreeNode[]>
     read: (path: string) => Promise<string>
     write: (path: string, content: string) => Promise<void>
-    openFile: (path: string) => Promise<{ success: boolean; error?: string }>
-    openInFolder: (path: string) => Promise<{ success: boolean; error?: string }>
+    openFile: (path: string) => Promise<boolean>
+    openInFolder: (path: string) => Promise<boolean>
   }
   config: {
     parse: (path: string, content: string) => Promise<ConfigNode[]>
@@ -39,6 +39,7 @@ declare global {
   interface Window {
     electronAPI: ElectronAPI
   }
+  const __APP_VERSION__: string
 }
 
 export {}

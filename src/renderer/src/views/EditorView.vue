@@ -6,12 +6,12 @@
         <div class="sidebar">
           <div class="sidebar-header">
             <span class="folder-icon">📁</span>
-            <span class="folder-name" :title="serverPath">{{ serverName }}</span>
+            <span class="folder-name" :title="serverPath">{{ fileStore.serverName }}</span>
           </div>
           <div class="sidebar-content">
             <FileTree
-              :files="configFiles"
-              :selected-path="selectedFile?.path"
+              :files="fileStore.configFiles"
+              :selected-path="fileStore.selectedFile?.path"
               @select="handleFileSelect"
             />
           </div>
@@ -26,27 +26,47 @@
             <button class="mc-toolbar-btn" @click="goHome">
               <span>◀</span> 返回
             </button>
-            <template v-if="selectedFile">
+            <template v-if="fileStore.selectedFile">
               <span class="toolbar-divider"></span>
-              <span class="file-type-tag" :class="selectedFile.type">
-                {{ selectedFile.type.toUpperCase() }}
+              <span class="file-type-tag" :class="fileStore.selectedFile.type">
+                {{ fileStore.selectedFile.type.toUpperCase() }}
               </span>
-              <el-tooltip :content="selectedFile.path" placement="bottom" :show-after="300">
-                <span class="file-path">{{ selectedFile.relativePath || selectedFile.name }}</span>
+              <el-tooltip :content="fileStore.selectedFile.path" placement="bottom" :show-after="300">
+                <span class="file-path">{{ fileStore.selectedFile.relativePath || fileStore.selectedFile.name }}</span>
               </el-tooltip>
             </template>
           </div>
           <div class="toolbar-right">
             <button
-              v-if="selectedFile"
+              v-if="fileStore.selectedFile"
+              class="mc-toolbar-btn"
+              :class="{ disabled: !configStore.canUndo }"
+              :disabled="!configStore.canUndo"
+              title="撤销 (Ctrl+Z)"
+              @click="configStore.undo()"
+            >
+              <span>↩</span>
+            </button>
+            <button
+              v-if="fileStore.selectedFile"
+              class="mc-toolbar-btn"
+              :class="{ disabled: !configStore.canRedo }"
+              :disabled="!configStore.canRedo"
+              title="重做 (Ctrl+Shift+Z)"
+              @click="configStore.redo()"
+            >
+              <span>↪</span>
+            </button>
+            <button
+              v-if="fileStore.selectedFile"
               class="mc-toolbar-btn primary"
-              :class="{ disabled: !hasChanges }"
-              :disabled="!hasChanges"
+              :class="{ disabled: !configStore.hasChanges }"
+              :disabled="!configStore.hasChanges"
               @click="saveConfig"
             >
               <span>💾</span> 保存
             </button>
-            <button v-if="selectedFile" class="mc-toolbar-btn" @click="showBackupPanel = true">
+            <button v-if="fileStore.selectedFile" class="mc-toolbar-btn" @click="showBackupPanel = true">
               <span>🕐</span> 备份
             </button>
           </div>
@@ -54,11 +74,11 @@
 
         <!-- 编辑区域 -->
         <div class="editor-area">
-          <template v-if="selectedFile">
+          <template v-if="fileStore.selectedFile">
             <ConfigEditor
-              :file="selectedFile"
-              :config-data="configData"
-              :metadata="currentMetadata"
+              :file="fileStore.selectedFile"
+              :config-data="configStore.configData"
+              :metadata="configStore.metadata"
               @change="handleConfigChange"
             />
           </template>
@@ -75,7 +95,7 @@
     <!-- 备份面板 -->
     <BackupPanel
       v-if="showBackupPanel"
-      :file-path="selectedFile?.path || ''"
+      :file-path="fileStore.selectedFile?.path || ''"
       @close="showBackupPanel = false"
       @restore="handleRestore"
     />
@@ -83,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ResizableSidebar from '@/components/layout/ResizableSidebar.vue'
@@ -91,40 +111,51 @@ import FileTree from '@/components/tree/FileTree.vue'
 import ConfigEditor from '@/components/editor/ConfigEditor.vue'
 import BackupPanel from '@/components/backup/BackupPanel.vue'
 import { useFileStore } from '@/stores/fileStore'
-import type { ConfigFile, ConfigNode, FieldMetadata, ConfigFileType } from '../../common/types'
+import { useConfigStore } from '@/stores/configStore'
+import type { ConfigFile, ConfigValue } from '../../common/types'
 
 const route = useRoute()
 const router = useRouter()
 const fileStore = useFileStore()
+const configStore = useConfigStore()
 
 const serverPath = ref('')
-const selectedFile = ref<ConfigFile | null>(null)
-const configFiles = ref<ConfigFile[]>([])
-const configData = ref<ConfigNode[]>([])
-const currentMetadata = ref<Record<string, FieldMetadata>>({})
 const showBackupPanel = ref(false)
-const hasChanges = ref(false)
-
-const serverName = computed(() => {
-  if (!serverPath.value) return 'Minecraft'
-  const parts = serverPath.value.replace(/\\/g, '/').split('/')
-  return parts[parts.length - 1] || 'Minecraft'
-})
 
 onMounted(async () => {
   const dir = route.query.dir as string
   if (dir) {
     serverPath.value = dir
+    fileStore.setServerPath(dir)
     await loadConfigFiles()
   } else {
     router.push('/')
   }
+  window.addEventListener('keydown', handleKeyboard)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyboard)
+})
+
+function handleKeyboard(e: KeyboardEvent): void {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault()
+    if (configStore.hasChanges) saveConfig()
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+    e.preventDefault()
+    if (configStore.canUndo) configStore.undo()
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
+    e.preventDefault()
+    if (configStore.canRedo) configStore.redo()
+  }
+}
 
 async function loadConfigFiles(): Promise<void> {
   try {
     const files = await window.electronAPI.file.scanConfigs(serverPath.value)
-    configFiles.value = files
     fileStore.setConfigFiles(files)
     if (files.length === 0) {
       ElMessage.warning('未找到任何配置文件')
@@ -135,7 +166,7 @@ async function loadConfigFiles(): Promise<void> {
 }
 
 async function handleFileSelect(file: ConfigFile): Promise<void> {
-  if (hasChanges.value) {
+  if (configStore.hasChanges) {
     try {
       await ElMessageBox.confirm('当前有未保存的更改，是否放弃？', '提示', {
         confirmButtonText: '放弃',
@@ -147,47 +178,51 @@ async function handleFileSelect(file: ConfigFile): Promise<void> {
     }
   }
 
-  selectedFile.value = file
+  fileStore.setSelectedFile(file)
   await loadFileContent(file.path)
   await loadMetadata(file.path)
 }
 
-async function loadFileContent(path: string): Promise<void> {
+async function loadFileContent(filePath: string): Promise<void> {
   try {
-    const content = await window.electronAPI.file.read(path)
-    const data = await window.electronAPI.config.parse(path, content)
-    configData.value = data
-    hasChanges.value = false
+    const content = await window.electronAPI.file.read(filePath)
+    const data = await window.electronAPI.config.parse(filePath, content)
+    configStore.setConfigData(data)
   } catch (error) {
     ElMessage.error('加载文件失败：' + (error as Error).message)
   }
 }
 
-async function loadMetadata(path: string): Promise<void> {
+async function loadMetadata(filePath: string): Promise<void> {
   try {
-    const metadata = await window.electronAPI.metadata.get(path)
-    currentMetadata.value = metadata
+    const metadata = await window.electronAPI.metadata.get(filePath)
+    configStore.setMetadata(metadata)
   } catch {
-    currentMetadata.value = {}
+    configStore.setMetadata({})
   }
 }
 
-function handleConfigChange(data: ConfigNode[]): void {
-  configData.value = data
-  hasChanges.value = true
+function handleConfigChange(path: string, value: ConfigValue): void {
+  configStore.updateConfigNode(path, value)
 }
 
 async function saveConfig(): Promise<void> {
-  if (!selectedFile.value) return
+  if (!fileStore.selectedFile) return
 
   try {
-    await window.electronAPI.backup.create(selectedFile.value.path)
+    // 保存前自动备份，但不阻止保存
+    try {
+      await window.electronAPI.backup.create(fileStore.selectedFile.path)
+    } catch {
+      console.warn('自动备份失败，继续保存')
+    }
+
     const content = await window.electronAPI.config.serialize(
-      selectedFile.value.type,
-      configData.value
+      fileStore.selectedFile.type,
+      configStore.configData
     )
-    await window.electronAPI.file.write(selectedFile.value.path, content)
-    hasChanges.value = false
+    await window.electronAPI.file.write(fileStore.selectedFile.path, content)
+    configStore.markSaved()
     ElMessage.success('保存成功')
   } catch (error) {
     ElMessage.error('保存失败：' + (error as Error).message)
@@ -195,22 +230,26 @@ async function saveConfig(): Promise<void> {
 }
 
 async function handleRestore(): Promise<void> {
-  if (!selectedFile.value) return
-  await loadFileContent(selectedFile.value.path)
+  if (!fileStore.selectedFile) return
+  await loadFileContent(fileStore.selectedFile.path)
   showBackupPanel.value = false
   ElMessage.success('已恢复备份')
 }
 
 function goHome(): void {
-  if (hasChanges.value) {
+  if (configStore.hasChanges) {
     ElMessageBox.confirm('当前有未保存的更改，是否放弃？', '提示', {
       confirmButtonText: '放弃',
       cancelButtonText: '取消',
       type: 'warning'
     })
-      .then(() => router.push('/'))
+      .then(() => {
+        configStore.clear()
+        router.push('/')
+      })
       .catch(() => {})
   } else {
+    configStore.clear()
     router.push('/')
   }
 }

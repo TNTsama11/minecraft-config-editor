@@ -1,0 +1,50 @@
+{
+  "session_id": "session-1773125568",
+  "parent_session_id": null,
+  "state": "stopped",
+  "state_version": 1,
+  "started_at": "2026-03-10T06:52:48Z",
+  "updated_at": "2026-03-10T23:59:37Z",
+  "resume_token": "resume-1773125568",
+  "event_seq": 50,
+  "last_event_id": "event-000050",
+  "fork_count": 0,
+  "orchestration": {
+    "max_state_retries": 3,
+    "retry_backoff_seconds": 10
+  },
+  "cwd": "/o/pet",
+  "project_name": "pet",
+  "prompt_seq": 3,
+  "git": {
+    "branch": "main",
+    "uncommitted_changes": 4,
+    "last_commit": "b504c10"
+  },
+  "plans": {
+    "exists": false,
+    "last_modified": 0,
+    "wip_tasks": 0,
+    "todo_tasks": 0,
+    "pending_tasks": 0,
+    "completed_tasks": 0
+  },
+  "changes_this_session": [
+    {
+      "file": ".github/workflows/release.yml",
+      "action": "Edit",
+      "timestamp": "2026-03-10T07:55:22Z",
+      "important": false
+    },
+    {
+      "file": ".github/workflows/release.yml",
+      "action": "Write",
+      "timestamp": "2026-03-10T08:37:23Z",
+      "important": false
+    }
+  ],
+  "intent": "literal",
+  "ended_at": "2026-03-10T07:09:52Z",
+  "duration_minutes": 17,
+  "memory_logged": true
+}

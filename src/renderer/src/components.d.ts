@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     BackupPanel: typeof import('./components/backup/BackupPanel.vue')['default']
     ConfigEditor: typeof import('./components/editor/ConfigEditor.vue')['default']
+    ContextMenu: typeof import('./components/tree/ContextMenu.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCollapse: typeof import('element-plus/es')['ElCollapse']
     ElCollapseItem: typeof import('element-plus/es')['ElCollapseItem']

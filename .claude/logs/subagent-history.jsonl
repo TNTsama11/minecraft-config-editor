@@ -1,0 +1,3 @@
+{"event":"subagent_start","timestamp":"2026-03-10T07:00:21Z","agent_id":"unknown"}
+{"event":"subagent_stop","timestamp":"2026-03-10T07:09:06Z","agent_id":"unknown","transcript_path":"","transcript_preview":""}
+{"event":"subagent_stop","timestamp":"2026-03-11T00:00:02Z","agent_id":"unknown","transcript_path":"","transcript_preview":""}

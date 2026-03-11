@@ -30,7 +30,7 @@
         :class="{ active: selectedPath === node.path }"
         :style="{ paddingLeft: `${depth * 16 + 12}px` }"
         @click="handleSelect"
-        @contextmenu.prevent="showContextMenu"
+        @contextmenu.prevent="onContextMenu"
       >
         <span class="file-icon-space"></span>
         <el-icon class="file-icon" :class="node.fileType">
@@ -51,6 +51,9 @@
         @select="$emit('select', $event)"
       />
     </div>
+
+    <!-- 右键菜单 -->
+    <ContextMenu ref="contextMenuRef" @action="handleContextAction" />
   </div>
 </template>
 
@@ -58,6 +61,7 @@
 import { ref } from 'vue'
 import { ArrowRight, Folder, FolderOpened, Document, Tickets, Files } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import ContextMenu from './ContextMenu.vue'
 import type { FileTreeNode, ConfigFileType, ConfigFile } from '../../../../common/types'
 
 interface Props {
@@ -71,7 +75,8 @@ const emit = defineEmits<{
   select: [file: ConfigFile]
 }>()
 
-const isExpanded = ref(true)
+const isExpanded = ref(props.depth < 2)
+const contextMenuRef = ref<InstanceType<typeof ContextMenu>>()
 
 function toggleExpand(): void {
   isExpanded.value = !isExpanded.value
@@ -83,127 +88,22 @@ function handleSelect(): void {
   }
 }
 
-// 显示右键菜单
-function showContextMenu(event: MouseEvent): void {
+function onContextMenu(event: MouseEvent): void {
   if (!props.node.path) return
-
-  // 创建自定义右键菜单
-  const menu = document.createElement('div')
-  menu.className = 'custom-context-menu'
-  menu.innerHTML = `
-    <div class="menu-item" data-action="open">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <path d="M14 2v6h6"/>
-      </svg>
-      <span>打开文件</span>
-    </div>
-    <div class="menu-item" data-action="folder">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-      </svg>
-      <span>打开文件位置</span>
-    </div>
-  `
-
-  // 设置样式
-  Object.assign(menu.style, {
-    position: 'fixed',
-    left: `${event.clientX}px`,
-    top: `${event.clientY}px`,
-    background: '#fff',
-    borderRadius: '4px',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-    padding: '4px 0',
-    zIndex: '9999',
-    minWidth: '150px'
-  })
-
-  // 添加菜单项样式
-  const style = document.createElement('style')
-  style.textContent = `
-    .custom-context-menu .menu-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      cursor: pointer;
-      font-size: 13px;
-      color: #303133;
-      transition: background 0.15s;
-    }
-    .custom-context-menu .menu-item:hover {
-      background: #f5f7fa;
-    }
-    .custom-context-menu .menu-item svg {
-      color: #606266;
-    }
-  `
-  document.head.appendChild(style)
-
-  // 添加点击事件
-  menu.querySelectorAll('.menu-item').forEach((item) => {
-    item.addEventListener('click', async () => {
-      const action = (item as HTMLElement).dataset.action
-      if (action === 'open') {
-        await openFile()
-      } else if (action === 'folder') {
-        await openInFolder()
-      }
-      closeMenu()
-    })
-  })
-
-  // 关闭菜单的函数
-  function closeMenu() {
-    menu.remove()
-    style.remove()
-    document.removeEventListener('click', closeMenu)
-  }
-
-  // 添加到页面
-  document.body.appendChild(menu)
-
-  // 点击其他地方关闭菜单
-  setTimeout(() => {
-    document.addEventListener('click', closeMenu)
-  }, 0)
-
-  // 确保菜单在可视区域内
-  const rect = menu.getBoundingClientRect()
-  if (rect.right > window.innerWidth) {
-    menu.style.left = `${window.innerWidth - rect.width - 10}px`
-  }
-  if (rect.bottom > window.innerHeight) {
-    menu.style.top = `${window.innerHeight - rect.height - 10}px`
-  }
+  contextMenuRef.value?.show(event)
 }
 
-// 打开文件
-async function openFile(): Promise<void> {
+async function handleContextAction(action: 'open' | 'folder'): Promise<void> {
   if (!props.node.path) return
 
   try {
-    const result = await window.electronAPI.file.openFile(props.node.path)
-    if (!result.success) {
-      ElMessage.error('打开文件失败：' + result.error)
+    if (action === 'open') {
+      await window.electronAPI.file.openFile(props.node.path)
+    } else {
+      await window.electronAPI.file.openInFolder(props.node.path)
     }
   } catch (error) {
-    ElMessage.error('打开文件失败：' + (error as Error).message)
-  }
-}
-
-// 打开文件位置
-async function openInFolder(): Promise<void> {
-  if (!props.node.path) return
-
-  try {
-    const result = await window.electronAPI.file.openInFolder(props.node.path)
-    if (!result.success) {
-      ElMessage.error('打开文件位置失败：' + result.error)
-    }
-  } catch (error) {
-    ElMessage.error('打开文件位置失败：' + (error as Error).message)
+    ElMessage.error(`操作失败：${(error as Error).message}`)
   }
 }
 

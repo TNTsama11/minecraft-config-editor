@@ -9,7 +9,7 @@ export class MetadataService {
 
   // 内置的 server.properties 元数据
   private static readonly SERVER_PROPERTIES_METADATA: Record<string, FieldMetadata> = {
-    'server.port': {
+    'server-port': {
       description: '服务器监听的端口号',
       defaultValue: 25565,
       min: 1,
@@ -241,26 +241,26 @@ export class MetadataService {
   }
 
   /**
-   * 获取配置文件的元数据
+   * 获取配置文件的元数据（内置 + 用户自定义合并）
    */
   static async getMetadata(filePath: string): Promise<Record<string, FieldMetadata>> {
-    // 检查是否是 server.properties
     const fileName = path.basename(filePath).toLowerCase()
+    let builtinMetadata: Record<string, FieldMetadata> = {}
+
     if (fileName === 'server.properties') {
-      return this.SERVER_PROPERTIES_METADATA
+      builtinMetadata = { ...this.SERVER_PROPERTIES_METADATA }
     }
 
-    // 检查用户自定义元数据
     try {
       const userMetadata = await this.loadUserMetadata(filePath)
       if (Object.keys(userMetadata).length > 0) {
-        return userMetadata
+        return { ...builtinMetadata, ...userMetadata }
       }
     } catch (error) {
       console.error('加载用户元数据失败:', error)
     }
 
-    return {}
+    return builtinMetadata
   }
 
   /**

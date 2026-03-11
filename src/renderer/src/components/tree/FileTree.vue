@@ -248,19 +248,23 @@ function toggleCategory(category: keyof typeof expandedCategories.value): void {
   expandedCategories.value[category] = !expandedCategories.value[category]
 }
 
-// 高亮匹配的文本
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 function highlightText(text: string | undefined): string {
-  if (!text || !searchText.value) return text || ''
+  if (!text) return ''
+  if (!searchText.value) return escapeHtml(text)
 
   const search = searchText.value.toLowerCase()
   const lowerText = text.toLowerCase()
   const index = lowerText.indexOf(search)
 
-  if (index === -1) return text
+  if (index === -1) return escapeHtml(text)
 
-  const before = text.slice(0, index)
-  const match = text.slice(index, index + search.length)
-  const after = text.slice(index + search.length)
+  const before = escapeHtml(text.slice(0, index))
+  const match = escapeHtml(text.slice(index, index + search.length))
+  const after = escapeHtml(text.slice(index + search.length))
 
   return `${before}<mark class="highlight">${match}</mark>${after}`
 }

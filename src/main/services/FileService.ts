@@ -11,7 +11,7 @@ const CONFIG_EXTENSIONS: Record<string, ConfigFileType> = {
   '.yaml': 'yaml',
   '.toml': 'toml',
   '.json': 'json',
-  '.txt': 'properties'  // options.txt 等使用 properties 格式
+  '.txt': 'properties'
 }
 
 // 服务端核心配置文件
@@ -20,6 +20,8 @@ const SERVER_CONFIG_FILES = new Set([
   'bukkit.yml',
   'spigot.yml',
   'paper.yml',
+  'paper-global.yml',
+  'paper-world-defaults.yml',
   'purpur.yml',
   'pufferfish.yml',
   'tuinity.yml',
@@ -34,9 +36,8 @@ const SERVER_CONFIG_FILES = new Set([
   'ops.json',
   'usercache.json',
   'usernamecache.json',
-  'spigot.yml',
-  'paper-global.yml',
-  'paper-world-defaults.yml'
+  'velocity.toml',
+  'config.yml'
 ])
 
 // 客户端配置文件
@@ -52,7 +53,7 @@ const CLIENT_CONFIG_FILES = new Set([
   'output-client.log',  // 日志不算配置
 ])
 
-// 需要忽略的目录
+// 需要忽略的目录（全部小写，比对时统一 toLowerCase）
 const IGNORE_DIRECTORIES = new Set([
   'node_modules',
   '.git',
@@ -72,10 +73,13 @@ const IGNORE_DIRECTORIES = new Set([
   'entities',
   'poi',
   'dim',
-  'DIM1',
-  'DIM-1',
+  'dim1',
+  'dim-1',
   'generated'
 ])
+
+// 当前允许操作的根目录（路径穿越防护）
+let allowedRootDir: string | null = null
 
 export interface CategorizedFiles {
   serverConfigs: ConfigFile[]
@@ -94,6 +98,27 @@ export interface FileTreeNode {
 
 export class FileService {
   /**
+   * 校验文件路径是否在允许的根目录内，防止路径穿越攻击
+   */
+  private static validatePath(filePath: string): void {
+    if (!allowedRootDir) {
+      throw new FileSystemError(ErrorCode.FILE_READ_ERROR, filePath, '未选择工作目录')
+    }
+    const resolved = path.resolve(filePath)
+    const root = path.resolve(allowedRootDir)
+    if (!resolved.startsWith(root + path.sep) && resolved !== root) {
+      throw new FileSystemError(ErrorCode.FILE_READ_ERROR, filePath, '路径超出允许范围')
+    }
+  }
+
+  /**
+   * 获取当前允许的根目录
+   */
+  static getAllowedRoot(): string | null {
+    return allowedRootDir
+  }
+
+  /**
    * 打开目录选择对话框
    */
   static async selectDirectory(): Promise<string | null> {
@@ -107,6 +132,7 @@ export class FileService {
       return null
     }
 
+    allowedRootDir = result.filePaths[0]
     return result.filePaths[0]
   }
 
@@ -287,6 +313,7 @@ export class FileService {
    * 读取文件内容
    */
   static async readFile(filePath: string): Promise<string> {
+    this.validatePath(filePath)
     try {
       const content = await fs.readFile(filePath, 'utf-8')
       return content
@@ -303,6 +330,7 @@ export class FileService {
    * 写入文件内容
    */
   static async writeFile(filePath: string, content: string): Promise<void> {
+    this.validatePath(filePath)
     try {
       await fs.writeFile(filePath, content, 'utf-8')
     } catch (error) {
